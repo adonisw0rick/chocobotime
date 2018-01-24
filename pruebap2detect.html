@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script type="text/javascript" src="phaser.min.js"></script>
+</head>
+<body>
+    
+</body>
+</html>
+
+<script>
+    
+var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', {preload: preload, create: create, update: update, render: render });
+	var salto = true;
+function preload() {
+
+	game.load.image('contra2', 'curva2.png');
+	game.load.image('life', 'chocobo_life.png');
+	game.load.image('cactilio', 'MiniCactiliopng.png');
+	game.load.image('minicactilio', 'ChibiCactiliopng.png');
+	game.load.physics('physicsData', 'physics/sprites.json');
+	game.load.physics('physicsData2', 'ShapesCactilioCorona.json');
+	game.load.image('chocobito', 'chocobosolo.png');
+	game.load.image('tronco','troncopng.png');
+	game.load.spritesheet('chocobitos', 'choco60x65x9v2correr3.png', 64, 63, 9);
+	game.load.image('field', 'rio.png');
+}
+var field;
+var chocobito;
+var velocidad = 2;
+var contra;
+var life;
+var cactilio;
+var minicactilio;
+var tronco;
+var result = 'Click a body';
+
+function create() {
+
+	//	Enable p2 physics
+	game.physics.startSystem(Phaser.Physics.P2JS);
+
+	field = game.add.tileSprite(0,0, 800, 600, 'field');
+
+	contra = game.add.sprite(300, 530, 'contra2');
+	life = game.add.sprite(200, 200, 'life');
+	cactilio = game.add.sprite(500, 200, 'cactilio');
+	minicactilio = game.add.sprite(300, 300, 'minicactilio');
+	tronco = game.add.sprite(330, 520, 'tronco');
+
+	//	Enable the physics bodies on all the sprites and turn on the visual debugger
+	this.game.physics.p2.enable([ contra ], true);
+	game.physics.p2.enable([life], true);
+	game.physics.p2.enable([cactilio], true);
+	game.physics.p2.enable([minicactilio], true);
+	game.physics.p2.enable([tronco], true);
+	//	Convex polys
+	contra.body.clearShapes();
+	contra.body.loadPolygon('physicsData', 'contra2');
+	contra.body.friction = 0;
+	contra.body.static = true;
+	contra.unbreakable = true;
+
+	tronco.body.clearShapes();
+	tronco.body.loadPolygon('physicsData', 'contra3');
+	tronco.body.friction = 0;
+	tronco.body.static = true;
+	tronco.unbreakable = true;
+	tronco.alpha = 0;
+	cactilio.body.clearShapes();
+	cactilio.body.loadPolygon('physicsData2', 'MiniCactiliopng');
+	minicactilio.body.clearShapes();
+	minicactilio.body.loadPolygon('physicsData2', 'ChibiCactiliopng');
+	life.body.setCircle(55);
+	//chocobito.animations.add('right', [0, 1, 2, 3, 4, 5, 6, 7, 8], 10, true);
+	chocobito = game.add.sprite(100, 200, 'chocobitos', 9);
+	chocobito.animations.add('fly', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 20, true);
+	chocobito.play('fly')
+	chocobito.name = 'chocobito';
+	game.physics.p2.enable([chocobito], true);
+	chocobito.body.fixedRotation = true;
+	chocobito.body.clearShapes();
+	chocobito.body.loadPolygon('physicsData2', 'chocobosolo');
+	chocobito.body.collideWorldBounds = true;
+	
+	//chocobito.unbreakable = true;
+	// bunny.body.clearShapes();
+	// bunny.body.loadPolygon('physicsData', 'bunny');
+
+	// //	Circle
+	// wizball.body.setCircle(45);
+	//controles
+	this.spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+	this.X = game.input.keyboard.addKey(Phaser.Keyboard.X);
+	this.A = game.input.keyboard.addKey(Phaser.Keyboard.A);
+	this.S = game.input.keyboard.addKey(Phaser.Keyboard.S);
+	this.D = game.input.keyboard.addKey(Phaser.Keyboard.D);
+	this.W = game.input.keyboard.addKey(Phaser.Keyboard.W);
+	game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
+	game.input.keyboard.addKeyCapture([Phaser.Keyboard.X]);
+	game.input.keyboard.addKeyCapture([Phaser.Keyboard.A]);
+	game.input.keyboard.addKeyCapture([Phaser.Keyboard.S]);
+	game.input.keyboard.addKeyCapture([Phaser.Keyboard.D]);
+	game.input.keyboard.addKeyCapture([Phaser.Keyboard.W]);
+	cursors = game.input.keyboard.createCursorKeys();
+	jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+	game.physics.p2.gravity.y = 1380;
+
+	chocobito.body.collideWorldBounds = true;
+	game.input.onDown.add(click, this);
+
+	var seed = Date.now();
+	this.random = new Phaser.RandomDataGenerator([seed]);
+}
+
+
+function click(pointer) {
+
+	//	You can hitTest against an array of Sprites, an array of Phaser.Physics.P2.Body objects, or don't give anything
+	//	in which case it will check every Body in the whole world.
+	
+	var bodies = game.physics.p2.hitTest(pointer.position, [ life ]);
+
+	if (bodies.length === 0)
+	{
+		result = "You didn't click a Body";
+	}
+	else
+	{
+		result = "You clicked: ";
+
+		for (var i = 0; i < bodies.length; i++)
+		{
+			//	The bodies that come back are p2.Body objects.
+			//	The parent property is a Phaser.Physics.P2.Body which has a property called 'sprite'
+			//	This relates to the sprites we created earlier.
+			//	The 'key' property is just the texture name, which works well for this demo but you probably need something more robust for an actual game.
+			result = result + bodies[i].parent.sprite.key;
+
+			if (i < bodies.length - 1)
+			{
+				result = result + ', ';
+			}
+		}
+
+	}
+
+}
+
+function update() {
+	field.tilePosition.y = -1000;
+	field.tilePosition.x -= velocidad;
+
+	life.body.rotateLeft(10);
+	contra.body.x = contra.body.x - 10;
+	if (chocobito.body.y > 450){
+		salto = true;
+	}
+	if (cursors.up.isDown && chocobito.y >= -400) {
+		//chocobos.body.velocity.y = -250;
+		//jumpTimer = game.time.now + 750;
+		//chocobos.body.velocity.y = 10;
+		chocobito.body.velocity.y = -230;
+		//chocobos.y -= 1 * velocidad;
+		//chocobo.body.velocity.y = -200;
+	}
+	else if (cursors.up.isDown && chocobito.y >= -400) {
+		chocobito.body.velocity.y = -230;
+	}
+	if (this.spaceKey.isDown) {
+		chocobito.body.velocity.y = 65;
+	}
+	if (this.A.isDown) {
+		chocobito.body.velocity.x = -65;
+	}
+	if (this.S.isDown) {
+		chocobito.body.velocity.y = 65;
+	}
+	if (this.W.isDown && salto != false) {
+		chocobito.body.velocity.y = -165;
+
+		if (chocobito.body.y < 300){
+			salto = false;
+		}
+	}
+	if (this.D.isDown) {
+		chocobito.body.velocity.x = 65;
+	}
+	if (contra.body.x == -500){
+		contra.body.x = 800;
+	}
+}
+
+function render() {
+
+	game.debug.text(result, 32, 32);
+
+}
+</script>

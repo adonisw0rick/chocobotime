@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script type="text/javascript" src="phaser.min.js"></script>
+
+</head>
+<body>
+    
+</body>
+<script>
+
+
+
+var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
+
+function preload() {
+
+	game.load.spritesheet('gameboy', 'choco60x65x9v2.png', 65, 60);
+	game.load.image('atari', 'crystal.gif');
+
+	game.load.physics('physicsData', 'assets/physics/sprites.json');
+
+}
+
+var sprite;
+var sprite2;
+var sprite3;
+
+function create() {
+
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+	game.stage.backgroundColor = '#124184';
+
+	//	In this example the little Gameboy sprite can pass through the top/bottom of the Atari sprite
+	//	Because it's set to ignore collisions on its top/bottom faces.
+
+	sprite = game.add.sprite(300, 200, 'atari');
+	sprite.name = 'atari';
+	game.physics.enable(sprite, Phaser.Physics.ARCADE);
+	sprite.body.collideWorldBounds = true;
+	sprite.body.checkCollision.up = false;
+	sprite.body.checkCollision.down = false;
+	sprite.body.immovable = true;
+
+	sprite2 = game.add.sprite(350, 400, 'gameboy', 2);
+	sprite2.name = 'gameboy';
+
+	game.physics.enable(sprite2, Phaser.Physics.ARCADE);
+	sprite2.body.collideWorldBounds = true;
+	sprite2.body.bounce.setTo(1, 1);
+
+	sprite3 = game.add.sprite(400, 210, 'gameboy', 4);
+
+	game.physics.enable(sprite3, Phaser.Physics.ARCADE);
+
+	sprite3.name = 'gameboy2';
+	sprite3.body.collideWorldBounds = true;
+	sprite3.body.bounce.setTo(1, 1);
+
+	sprite2.body.velocity.y = 0;
+	sprite3.body.velocity.x = 500;
+    cursors = game.input.keyboard.createCursorKeys();
+}
+
+function update() {
+
+	//game.physics.arcade.collide(sprite, sprite2);
+	game.physics.arcade.collide(sprite, sprite3);
+    if (cursors.up.isDown && sprite3.y >= -400) {
+        sprite3.body.velocity.y = -230;
+    }
+    else if (cursors.down.isDown && sprite3.y >= -400) {
+        sprite3.body.velocity.y = 230;
+    }
+    else if (cursors.left.isDown && sprite3.y >= -400) {
+        sprite3.body.velocity.x = -230;
+    }
+    else if (cursors.right.isDown && sprite3.y >= -400) {
+        sprite3.body.velocity.x = 230;
+    }
+
+}
+
+function render() {
+
+	//game.debug.bodyInfo(sprite, 16, 24);
+
+	// game.debug.body(sprite);
+	// game.debug.body(sprite2);
+
+}
+</script>
+</html>
